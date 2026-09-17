@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
 
 @Service
@@ -25,15 +24,16 @@ public class JarExecutionService {
 
     private final String JAVA_COMMAND;
 
-    private final String DOWNLOADS_FOLDER;
+    private final String OUTPUT_PATH;
 
     public JarExecutionService(
-            @Value(value = "${ctt.jar.path}") String JAR_PATH
+            @Value(value = "${ctt.jar.path}") String JAR_PATH,
+            @Value(value = "${ctt.output.path}") String OUTPUT_PATH
     ) {
         this.JAR_PATH = JAR_PATH;
         this.JAR_COMMAND = "-jar";
         this.JAVA_COMMAND = "java";
-        this.DOWNLOADS_FOLDER = "Downloads";
+        this.OUTPUT_PATH = OUTPUT_PATH;
     }
 
     public JarExecutionResponse execute(
@@ -159,8 +159,9 @@ public class JarExecutionService {
 
         List<String> commands = new ArrayList<>();
 
-        String userHome = System.getProperty("user.home");
-        String outputPath = Paths.get(userHome, DOWNLOADS_FOLDER).toString();
+        String outputPath = OUTPUT_PATH
+                .replace("/", System.lineSeparator())
+                .replace("\\", System.lineSeparator());
 
         commands.add(JAVA_COMMAND);
         commands.add(JAR_COMMAND);

@@ -1,18 +1,24 @@
 FROM maven:3.9-eclipse-temurin-21 AS build
 
-WORKDIR /app
+WORKDIR /build
 
-COPY pom.xml .
-COPY src ./src
+COPY backend/pom.xml ./backend/pom.xml
+COPY backend/src ./backend/src
+
+WORKDIR /build/backend
 
 RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-COPY --from=build /app/target/*.jar app.jar
+# Copy Spring Boot backend JAR
+COPY --from=build /build/backend/target/*.jar backend.jar
+
+# Copy the JAR that your application executes
+COPY /jar/CTT-ZipModifier-1.0.18-SNAPSHOT.jar /app/jar/CTT-ZipModifier-1.0.18-SNAPSHOT.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "backend.jar"]

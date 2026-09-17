@@ -4,6 +4,7 @@ import com.example.ctt_converter_api.model.JarExecutionResponse;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -12,19 +13,28 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
 
 @Service
 public class JarExecutionService {
 
-    private static final String JAVA_COMMAND = "java";
+    private final String JAR_PATH;
 
-    private static final String JAR_PATH =
-            "/home/naveen/GitHub/TreSureX/ctt-convertor/target/" +
-                    "CTT-ZipModifier-1.0.18-SNAPSHOT.jar";
+    private final String JAR_COMMAND;
 
-    private static final String OUTPUT_PATH =
-            "/home/naveen/Projects/";
+    private final String JAVA_COMMAND;
+
+    private final String DOWNLOADS_FOLDER;
+
+    public JarExecutionService(
+            @Value(value = "${ctt.jar.path}") String JAR_PATH
+    ) {
+        this.JAR_PATH = JAR_PATH;
+        this.JAR_COMMAND = "-jar";
+        this.JAVA_COMMAND = "java";
+        this.DOWNLOADS_FOLDER = "Downloads";
+    }
 
     public JarExecutionResponse execute(
             MultipartFile inputFile,
@@ -149,8 +159,11 @@ public class JarExecutionService {
 
         List<String> commands = new ArrayList<>();
 
+        String userHome = System.getProperty("user.home");
+        String outputPath = Paths.get(userHome, DOWNLOADS_FOLDER).toString();
+
         commands.add(JAVA_COMMAND);
-        commands.add("-jar");
+        commands.add(JAR_COMMAND);
         commands.add(JAR_PATH);
 
         commands.add("-cfp");
@@ -160,7 +173,7 @@ public class JarExecutionService {
         commands.add(tempInputFile.toAbsolutePath().toString());
 
         commands.add("-ofp");
-        commands.add(OUTPUT_PATH);
+        commands.add(outputPath);
 
         commands.add("-icm");
         commands.add(String.valueOf(ignoreCase));

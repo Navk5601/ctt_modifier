@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTT Conversion Utility</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+    :root {
+        --bg: #150E2E;
+        --surface: #1E1640;
+        --surface-alt: #251C4D;
+        --border: #382C6B;
+        --border-soft: #2A2154;
+        --text: #F5F3FF;
+        --text-muted: #A79ED1;
+        --text-faint: #6E64A0;
+        --cyan: #00E5C7;
+        --magenta: #FF2E88;
+        --amber: #FFC93C;
+        --success: #3DDC84;
+        --error: #FF4D6D;
+    }
+
+    :root:not([data-theme="light"]) { color-scheme: dark; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        min-height: 100vh;
+        font-family: 'Inter', sans-serif;
+        background:
+            radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0) 0 0 / 26px 26px,
+            var(--bg);
+        color: var(--text);
+    }
+
+    .header {
+        height: 72px;
+        background: linear-gradient(115deg, #1E1640 0%, #150E2E 55%);
+        border-bottom: 2px solid var(--magenta);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 14px; }
+
+    .brand-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--magenta), var(--cyan));
+        box-shadow: 0 0 22px rgba(255, 46, 136, 0.45);
+        font-size: 20px;
+    }
+
+    .brand-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+    }
+
+    .brand-subtitle {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    .header-button {
+        width: 42px;
+        height: 42px;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        background: var(--surface);
+        color: var(--text);
+        cursor: pointer;
+        font-size: 17px;
+        transition: 0.2s;
+    }
+
+    .header-button:hover {
+        border-color: var(--cyan);
+        box-shadow: 0 0 0 3px rgba(0, 229, 199, 0.15);
+        transform: translateY(-1px);
+    }
+
+    .page { max-width: 1050px; margin: 50px auto; padding: 0 20px; }
+
+    .page-heading { margin-bottom: 30px; }
+
+    .page-heading .eyebrow-bar {
+        width: 56px;
+        height: 5px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--magenta));
+        margin-bottom: 16px;
+    }
+
+    .page-heading h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+        background: linear-gradient(90deg, var(--cyan), var(--magenta) 65%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-block;
+    }
+
+    .page-heading p {
+        margin-top: 9px;
+        color: var(--text-muted);
+        font-size: 14px;
+        max-width: 60ch;
+    }
+
+    .main-card {
+        background: var(--surface);
+        border-radius: 18px;
+        padding: 32px;
+        border: 1px solid var(--border-soft);
+        box-shadow: 0 24px 70px rgba(6, 3, 20, 0.55);
+    }
+
+    .file-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+
+    .file-section {
+        border: 1px solid var(--border-soft);
+        border-top: 3px solid var(--file-accent, var(--cyan));
+        border-radius: 14px;
+        padding: 20px;
+        background: var(--surface-alt);
+    }
+
+    .file-section.input-file { --file-accent: var(--cyan); }
+    .file-section.config-file { --file-accent: var(--magenta); }
+
+    .file-title { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+
+    .file-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: color-mix(in srgb, var(--file-accent) 18%, transparent);
+        color: var(--file-accent);
+        font-size: 18px;
+    }
+
+    .file-title-text { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; }
+    .required { color: var(--error); margin-left: 3px; }
+    .file-description { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+
+    .drop-zone {
+        border: 2px dashed var(--border);
+        border-radius: 10px;
+        min-height: 125px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--surface);
+        padding: 15px;
+        text-align: center;
+    }
+
+    .file-section.input-file .drop-zone:hover,
+    .file-section.input-file .drop-zone.dragover {
+        border-color: var(--cyan);
+        background: color-mix(in srgb, var(--cyan) 10%, var(--surface));
+    }
+
+    .file-section.config-file .drop-zone:hover,
+    .file-section.config-file .drop-zone.dragover {
+        border-color: var(--magenta);
+        background: color-mix(in srgb, var(--magenta) 10%, var(--surface));
+    }
+
+    .upload-icon { font-size: 26px; margin-bottom: 8px; }
+    .drop-text { font-size: 13px; font-weight: 600; color: var(--text); }
+    .drop-subtext { font-size: 11px; color: var(--text-faint); margin-top: 4px; }
+    .file-input { display: none; }
+
+    .selected-file {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        margin-top: 10px;
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--file-accent) 14%, var(--surface));
+        border: 1px solid color-mix(in srgb, var(--file-accent) 40%, transparent);
+    }
+
+    .selected-file-info { display: flex; align-items: center; gap: 9px; min-width: 0; }
+    .selected-file-icon { font-size: 18px; }
+
+    .selected-file-name {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--text);
+    }
+
+    .selected-file-size { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .remove-file { border: none; background: transparent; color: var(--error); cursor: pointer; font-size: 16px; padding: 4px; }
+
+    .options { border-top: 1px solid var(--border-soft); padding-top: 24px; margin-top: 6px; }
+    .options-title { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+
+    .option {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px;
+        border: 1px solid var(--border-soft);
+        border-radius: 10px;
+        background: var(--surface-alt);
+    }
+
+    .option-left { display: flex; align-items: center; gap: 12px; }
+
+    .option-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--amber) 18%, transparent);
+        color: var(--amber);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .option-name { font-size: 13px; font-weight: 600; }
+    .option-description { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+    .switch { position: relative; width: 46px; height: 24px; flex-shrink: 0; }
+    .switch input { display: none; }
+
+    .slider {
+        position: absolute;
+        inset: 0;
+        background: var(--border);
+        border-radius: 20px;
+        cursor: pointer;
+        transition: 0.25s;
+    }
+
+    .slider:before {
+        content: "";
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        left: 3px;
+        top: 3px;
+        background: var(--text);
+        border-radius: 50%;
+        transition: 0.25s;
+    }
+
+    .switch input:checked + .slider { background: var(--amber); }
+    .switch input:checked + .slider:before { transform: translateX(22px); background: #150E2E; }
+
+    .actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 26px; }
+
+    .button {
+        height: 46px;
+        padding: 0 22px;
+        border-radius: 9px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: 'Space Grotesk', sans-serif;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .reset-button { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+    .reset-button:hover { border-color: var(--text-muted); color: var(--text); background: var(--surface-alt); }
+
+    .submit-button {
+        min-width: 160px;
+        background: linear-gradient(90deg, var(--magenta), var(--cyan));
+        color: #150E2E;
+        box-shadow: 0 10px 26px rgba(255, 46, 136, 0.3);
+    }
+
+    .submit-button:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(0, 229, 199, 0.35); }
+    .submit-button:disabled { background: var(--border); color: var(--text-faint); cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(21, 14, 46, 0.35);
+        border-top-color: #150E2E;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .status-bar {
+        display: none;
+        margin-top: 22px;
+        padding: 14px 16px;
+        border-radius: 9px;
+        font-size: 13px;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .status-success {
+        background: color-mix(in srgb, var(--success) 14%, var(--surface));
+        color: var(--success);
+        border: 1px solid color-mix(in srgb, var(--success) 45%, transparent);
+    }
+
+    .status-error {
+        background: color-mix(in srgb, var(--error) 14%, var(--surface));
+        color: var(--error);
+        border: 1px solid color-mix(in srgb, var(--error) 45%, transparent);
+    }
+
+    .logs-panel {
+        position: fixed;
+        top: 0;
+        right: -560px;
+        width: 540px;
+        max-width: 100%;
+        height: 100vh;
+        background: #0F0A24;
+        color: var(--text);
+        z-index: 2000;
+        box-shadow: -12px 0 40px rgba(0, 0, 0, 0.5);
+        transition: right 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        border-left: 2px solid var(--magenta);
+    }
+
+    .logs-panel.open { right: 0; }
+
+    .logs-header {
+        height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 22px;
+        border-bottom: 1px solid var(--border-soft);
+    }
+
+    .logs-title { display: flex; align-items: center; gap: 9px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+    .logs-actions { display: flex; gap: 8px; }
+
+    .log-button {
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text-muted);
+        border-radius: 7px;
+        padding: 7px 11px;
+        cursor: pointer;
+        font-size: 11px;
+        font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .log-button:hover { border-color: var(--cyan); color: var(--text); }
+    .close-button { font-size: 18px; padding: 5px 10px; font-family: inherit; }
+
+    .logs-info {
+        padding: 12px 22px;
+        font-size: 11px;
+        color: var(--text-faint);
+        border-bottom: 1px solid var(--border-soft);
+        font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .logs-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 18px 22px;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 12px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .log-line { margin-bottom: 3px; color: var(--text-muted); }
+    .log-time { color: var(--text-faint); }
+    .log-success { color: var(--success); }
+    .log-error { color: var(--error); }
+    .log-info { color: var(--cyan); }
+
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(6, 3, 20, 0.55); z-index: 1500; }
+    .overlay.show { display: block; }
+
+    .footer { text-align: center; color: var(--text-faint); font-size: 11px; margin-top: 26px; font-family: 'IBM Plex Mono', monospace; }
+
+    @media (max-width: 750px) {
+        .file-grid { grid-template-columns: 1fr; }
+        .page { margin-top: 28px; }
+        .main-card { padding: 20px; }
+        .logs-panel { width: 100%; right: -100%; }
+        .actions { flex-direction: column; }
+        .button { width: 100%; }
+    }
+
+    @supports not (color: color-mix(in srgb, red, blue)) {
+        .selected-file { background: var(--surface-alt); }
+        .status-success { background: var(--surface-alt); }
+        .status-error { background: var(--surface-alt); }
+    }
+
+</style>
+</head>
+<body>
+
+<header class="header">
+    <div class="brand">
+        <div class="brand-icon">⚙</div>
+        <div>
+            <div class="brand-title">CTT Conversion Utility</div>
+            <div class="brand-subtitle">FILE PROCESSING &amp; CONVERSION</div>
+        </div>
+    </div>
+    <div class="header-actions">
+        <button class="header-button" onclick="toggleLogs()" title="View Logs">📝</button>
+    </div>
+</header>
+
+<div id="overlay" class="overlay" onclick="toggleLogs()"></div>
+
+<main class="page">
+
+    <div class="page-heading">
+        <div class="eyebrow-bar"></div>
+        <h1>Process files</h1>
+        <p>Upload your input and configuration files, then run the utility to see execution output in real time.</p>
+    </div>
+
+    <div class="main-card">
+
+        <div class="file-grid">
+
+            <div class="file-section input-file">
+                <div class="file-title">
+                    <div class="file-icon">📦</div>
+                    <div class="file-title-text">Input File<span class="required">*</span></div>
+                </div>
+                <div class="file-description">Select the input ZIP or supported file.</div>
+
+                <div id="inputDropZone" class="drop-zone" onclick="document.getElementById('inputFile').click()">
+                    <div class="upload-icon">📁</div>
+                    <div class="drop-text">Click to browse or drag &amp; drop</div>
+                    <div class="drop-subtext">Select your input file</div>
+                </div>
+
+                <input type="file" id="inputFile" class="file-input" onchange="handleFileSelect('input')">
+
+                <div id="inputSelected" class="selected-file">
+                    <div class="selected-file-info">
+                        <div class="selected-file-icon">📄</div>
+                        <div>
+                            <div id="inputFileName" class="selected-file-name"></div>
+                            <div id="inputFileSize" class="selected-file-size"></div>
+                        </div>
+                    </div>
+                    <button class="remove-file" onclick="removeFile(event, 'input')">✕</button>
+                </div>
+            </div>
+
+            <div class="file-section config-file">
+                <div class="file-title">
+                    <div class="file-icon">⚙️</div>
+                    <div class="file-title-text">Configuration File<span class="required">*</span></div>
+                </div>
+                <div class="file-description">Upload the configuration required by the JAR.</div>
+
+                <div id="configDropZone" class="drop-zone" onclick="document.getElementById('configFile').click()">
+                    <div class="upload-icon">📄</div>
+                    <div class="drop-text">Click to browse or drag &amp; drop</div>
+                    <div class="drop-subtext">Select configuration file</div>
+                </div>
+
+                <input type="file" id="configFile" class="file-input" onchange="handleFileSelect('config')">
+
+                <div id="configSelected" class="selected-file">
+                    <div class="selected-file-info">
+                        <div class="selected-file-icon">⚙️</div>
+                        <div>
+                            <div id="configFileName" class="selected-file-name"></div>
+                            <div id="configFileSize" class="selected-file-size"></div>
+                        </div>
+                    </div>
+                    <button class="remove-file" onclick="removeFile(event, 'config')">✕</button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="options">
+            <div class="options-title">Processing Options</div>
+
+            <div class="option">
+                <div class="option-left">
+                    <div class="option-icon">🔤</div>
+                    <div>
+                        <div class="option-name">Ignore Case Modification</div>
+                        <div class="option-description">Enable case-insensitive processing during JAR execution.</div>
+                    </div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="ignoreCase">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div id="statusBar" class="status-bar">
+            <span id="statusIcon"></span>
+            <span id="statusMessage"></span>
+        </div>
+
+        <div class="actions">
+            <button class="button reset-button" onclick="resetForm()">↻ Reset</button>
+            <button id="submitButton" class="button submit-button" onclick="submitFiles()">
+                <span id="spinner" class="spinner"></span>
+                <span id="submitText">▶ Execute JAR</span>
+            </button>
+        </div>
+
+    </div>
+
+    <div class="footer">&copy; 2026 CTT Conversion Utility. All rights reserved.</div>
+
+</main>
+
+<aside id="logsPanel" class="logs-panel">
+    <div class="logs-header">
+        <div class="logs-title">📝 <span>Execution Logs</span></div>
+        <div class="logs-actions">
+            <button class="log-button" onclick="copyLogs()">Copy</button>
+            <button class="log-button" onclick="clearLogs()">Clear</button>
+            <button class="log-button close-button" onclick="toggleLogs()">×</button>
+        </div>
+    </div>
+    <div class="logs-info">JAR execution output and application logs</div>
+    <div id="logsContent" class="logs-content">
+        <div class="log-line"><span class="log-time">[SYSTEM]</span> Waiting for execution...</div>
+    </div>
+</aside>
+
+<script>
+
+    const API_URL = "http://localhost:8080/api/jar/execute";
+
+    function handleFileSelect(type) {
+        const input = document.getElementById(type === "input" ? "inputFile" : "configFile");
+        const file = input.files[0];
+        if (!file) return;
+        showSelectedFile(type, file);
+    }
+
+    function showSelectedFile(type, file) {
+        const selected = document.getElementById(type === "input" ? "inputSelected" : "configSelected");
+        const name = document.getElementById(type === "input" ? "inputFileName" : "configFileName");
+        const size = document.getElementById(type === "input" ? "inputFileSize" : "configFileSize");
+        name.innerText = file.name;
+        size.innerText = formatFileSize(file.size);
+        selected.style.display = "flex";
+    }
+
+    function removeFile(event, type) {
+        event.stopPropagation();
+        const input = document.getElementById(type === "input" ? "inputFile" : "configFile");
+        const selected = document.getElementById(type === "input" ? "inputSelected" : "configSelected");
+        input.value = "";
+        selected.style.display = "none";
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const units = ["Bytes", "KB", "MB", "GB"];
+        const index = Math.floor(Math.log(bytes) / Math.log(1024));
+        return parseFloat((bytes / Math.pow(1024, index)).toFixed(2)) + " " + units[index];
+    }
+
+    setupDropZone("inputDropZone", "inputFile");
+    setupDropZone("configDropZone", "configFile");
+
+    function setupDropZone(zoneId, inputId) {
+        const zone = document.getElementById(zoneId);
+        const input = document.getElementById(inputId);
+
+        zone.addEventListener("dragover", function(event) {
+            event.preventDefault();
+            zone.classList.add("dragover");
+        });
+
+        zone.addEventListener("dragleave", function() {
+            zone.classList.remove("dragover");
+        });
+
+        zone.addEventListener("drop", function(event) {
+            event.preventDefault();
+            zone.classList.remove("dragover");
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                input.files = files;
+                handleFileSelect(inputId === "inputFile" ? "input" : "config");
+            }
+        });
+    }
+
+    async function submitFiles() {
+        const inputFile = document.getElementById("inputFile").files[0];
+        const configFile = document.getElementById("configFile").files[0];
+        const ignoreCase = document.getElementById("ignoreCase").checked;
+
+        if (!inputFile) {
+            showStatus("error", "Please select an input file.");
+            toggleLogs(true);
+            addLog("Input file is required.", "error");
+            return;
+        }
+
+        if (!configFile) {
+            showStatus("error", "Please select a configuration file.");
+            toggleLogs(true);
+            addLog("Configuration file is required.", "error");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("inputFile", inputFile);
+        formData.append("configFile", configFile);
+        formData.append("ignoreCase", ignoreCase);
+
+        toggleLogs(true);
+        clearLogs();
+        setProcessing(true);
+
+        addLog("==========================================");
+        addLog("Starting JAR execution...", "info");
+        addLog("Input File  : " + inputFile.name);
+        addLog("Config File : " + configFile.name);
+        addLog("Ignore Case : " + ignoreCase);
+        addLog("==========================================");
+
+        const startTime = Date.now();
+
+        try {
+            const response = await fetch(API_URL, { method: "POST", body: formData });
+            const responseData = await response.json();
+            const executionTime = ((Date.now() - startTime) / 1000).toFixed(2);
+
+            addLog("HTTP Status : " + response.status);
+            addLog("Execution Time : " + executionTime + " seconds");
+
+            if (response.ok && responseData.success) {
+                showStatus("success", "JAR execution completed successfully.");
+                addLog("JAR execution completed successfully.", "success");
+                addLog("Exit Code : " + responseData.exitCode, "success");
+
+                if (responseData.output) {
+                    addLog("------------------------------------------");
+                    addLog("JAR OUTPUT:", "info");
+                    addLog(responseData.output);
+                }
+            } else {
+                showStatus("error", "JAR execution failed.");
+                addLog("JAR execution failed.", "error");
+                addLog("Exit Code : " + responseData.exitCode, "error");
+
+                if (responseData.error) {
+                    addLog("------------------------------------------");
+                    addLog("ERROR:", "error");
+                    addLog(responseData.error, "error");
+                }
+
+                if (responseData.output) {
+                    addLog("------------------------------------------");
+                    addLog("JAR OUTPUT:");
+                    addLog(responseData.output);
+                }
+            }
+        } catch (error) {
+            showStatus("error", "Unable to communicate with the API.");
+            addLog("==========================================", "error");
+            addLog("FRONTEND ERROR", "error");
+            addLog(error.message, "error");
+            addLog(error.stack, "error");
+        } finally {
+            setProcessing(false);
+        }
+    }
+
+    function setProcessing(processing) {
+        const button = document.getElementById("submitButton");
+        const spinner = document.getElementById("spinner");
+        const text = document.getElementById("submitText");
+        button.disabled = processing;
+        spinner.style.display = processing ? "block" : "none";
+        text.innerText = processing ? "Processing..." : "▶ Execute JAR";
+    }
+
+    function showStatus(type, message) {
+        const status = document.getElementById("statusBar");
+        const icon = document.getElementById("statusIcon");
+        const text = document.getElementById("statusMessage");
+        status.style.display = "flex";
+        status.className = "status-bar " + (type === "success" ? "status-success" : "status-error");
+        icon.innerText = type === "success" ? "✓" : "✕";
+        text.innerText = message;
+    }
+
+    function addLog(message, type = "") {
+        const logs = document.getElementById("logsContent");
+        const timestamp = new Date().toLocaleTimeString();
+        const line = document.createElement("div");
+        line.className = "log-line " + (type ? "log-" + type : "");
+        line.innerText = `[${timestamp}] ${message}`;
+        logs.appendChild(line);
+        logs.scrollTop = logs.scrollHeight;
+    }
+
+    function toggleLogs(forceOpen = false) {
+        const panel = document.getElementById("logsPanel");
+        const overlay = document.getElementById("overlay");
+        if (forceOpen || !panel.classList.contains("open")) {
+            panel.classList.add("open");
+            overlay.classList.add("show");
+        } else {
+            panel.classList.remove("open");
+            overlay.classList.remove("show");
+        }
+    }
+
+    function clearLogs() {
+        document.getElementById("logsContent").innerHTML = "";
+        addLog("Logs cleared.");
+    }
+
+    async function copyLogs() {
+        const logs = document.getElementById("logsContent").innerText;
+        try {
+            await navigator.clipboard.writeText(logs);
+            addLog("Logs copied to clipboard.", "success");
+        } catch (error) {
+            addLog("Unable to copy logs.", "error");
+        }
+    }
+
+    function resetForm() {
+        document.getElementById("inputFile").value = "";
+        document.getElementById("configFile").value = "";
+        document.getElementById("ignoreCase").checked = false;
+        document.getElementById("inputSelected").style.display = "none";
+        document.getElementById("configSelected").style.display = "none";
+        document.getElementById("statusBar").style.display = "none";
+        clearLogs();
+        addLog("Form has been reset.", "info");
+    }
+
+</script>
+
+</body>
+</html>

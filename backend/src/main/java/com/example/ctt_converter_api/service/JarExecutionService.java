@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import java.util.List;
 import java.util.ArrayList;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -159,9 +160,7 @@ public class JarExecutionService {
 
         List<String> commands = new ArrayList<>();
 
-        String outputPath = OUTPUT_PATH
-                .replace("/", System.lineSeparator())
-                .replace("\\", System.lineSeparator());
+        String outputPath = OUTPUT_PATH.replace("/", File.separator);
 
         commands.add(JAVA_COMMAND);
         commands.add(JAR_COMMAND);
